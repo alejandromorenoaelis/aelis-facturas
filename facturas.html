@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aelis · Guardar factura</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+  <style>
+    :root{
+      --dark:#001C0B; --green:#5EFCA1; --green-deep:#0E7A4B;
+      --ink:#12211A; --muted:#6B7C74; --surface:#FFFFFF;
+      --surface-2:#F4F7F5; --line:#E4EAE7; --danger:#B4291F;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    body{
+      font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+      color:var(--ink); background:var(--surface); font-size:14px; line-height:1.45;
+    }
+
+    .app-header{background:var(--dark); color:#fff; padding:16px 18px 18px;}
+    .wordmark{height:40px; width:auto; display:block; margin-bottom:0;}
+    .app-sub{
+      margin-top:2px; margin-left:8px; font-size:12px; letter-spacing:2px;
+      text-transform:uppercase; color:var(--green); font-weight:600;
+    }
+
+    .app-body{padding:16px 18px 20px;}
+
+    .card{
+      background:var(--surface-2); border:1px solid var(--line);
+      border-radius:8px; padding:12px 14px; margin-bottom:16px;
+    }
+    .row{display:flex; flex-direction:column; gap:1px; padding:5px 0;}
+    .row + .row{border-top:1px solid var(--line);}
+    .k{font-size:11px; letter-spacing:.4px; text-transform:uppercase; color:var(--muted);}
+    .v{font-size:14px; font-weight:600; word-break:break-word;}
+
+    /* Bloque de sección */
+    .seccion{margin-bottom:16px;}
+    .seccion > .k{margin-bottom:7px; display:block;}
+
+    /* Chips de acreedor */
+    .chips{display:flex; flex-wrap:wrap; gap:7px;}
+    .chip{
+      border:1px solid var(--line); background:var(--surface); color:var(--ink);
+      border-radius:999px; padding:7px 14px; font-family:inherit; font-size:13px;
+      font-weight:600; cursor:pointer; transition:background .12s ease, border-color .12s ease;
+    }
+    .chip:hover{background:var(--surface-2);}
+    .chip[aria-pressed="true"]{
+      background:var(--dark); border-color:var(--dark); color:var(--green);
+    }
+    .chip:focus-visible{outline:3px solid var(--dark); outline-offset:2px;}
+    .chips-vacio{color:var(--muted); font-size:12.5px;}
+
+    /* Lista de adjuntos */
+    .adj{
+      display:flex; align-items:center; gap:10px; padding:9px 11px;
+      border:1px solid var(--line); border-radius:8px; background:var(--surface-2);
+      margin-bottom:7px; cursor:pointer;
+    }
+    .adj input{width:16px; height:16px; accent-color:var(--green-deep); cursor:pointer; flex:0 0 auto;}
+    .adj-txt{min-width:0;}
+    .adj-nom{font-weight:600; font-size:13px; word-break:break-all;}
+    .adj-kb{color:var(--muted); font-size:11.5px;}
+    .sin-adj{
+      color:var(--muted); font-size:13px; padding:11px 13px;
+      border:1px dashed var(--line); border-radius:8px; background:var(--surface-2);
+    }
+
+    .btn{
+      width:100%; border:0; border-radius:8px; cursor:pointer;
+      background:var(--green); color:var(--dark);
+      font-family:inherit; font-size:15px; font-weight:700; padding:13px 16px;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      transition:filter .15s ease, transform .05s ease;
+    }
+    .btn:hover:not(:disabled){filter:brightness(.94);}
+    .btn:active:not(:disabled){transform:translateY(1px);}
+    .btn:disabled{background:#D7DEDA; color:#8A968F; cursor:default;}
+    .btn:focus-visible{outline:3px solid var(--dark); outline-offset:2px;}
+
+    .spin{
+      width:16px; height:16px; border:2px solid rgba(0,28,11,.25);
+      border-top-color:var(--dark); border-radius:50%; animation:rot .7s linear infinite;
+    }
+    @keyframes rot{to{transform:rotate(360deg);}}
+
+    .status{
+      margin-top:16px; display:flex; gap:10px; align-items:flex-start;
+      padding:12px 14px; border-radius:8px; font-size:13.5px;
+    }
+    .status .ico{flex:0 0 auto; margin-top:1px;}
+    .status .msg{font-weight:600;}
+    .status .sub{font-weight:400; color:var(--muted); font-size:12.5px; margin-top:2px;}
+    .status.ok{background:#EAF8F0; border:1px solid #B7E6CC;}
+    .status.ok .msg{color:var(--green-deep);}
+    .status.work{background:var(--surface-2); border:1px solid var(--line); color:var(--muted);}
+    .status.err{background:#FBECEA; border:1px solid #F0C3BE;}
+    .status.err .msg{color:var(--danger);}
+
+    .check{width:20px;height:20px;}
+    .check circle{fill:var(--green-deep);}
+    .check path{
+      fill:none; stroke:#fff; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;
+      stroke-dasharray:20; stroke-dashoffset:20; animation:draw .35s ease .05s forwards;
+    }
+    @keyframes draw{to{stroke-dashoffset:0;}}
+
+    @media (prefers-reduced-motion: reduce){
+      .spin{animation:none;} .check path{animation:none; stroke-dashoffset:0;}
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <img class="wordmark" src="assets/logo-aelis.png" alt="aelis" />
+    <div class="app-sub">Guardar factura</div>
+  </header>
+
+  <main class="app-body">
+    <section class="card">
+      <div class="row"><span class="k">Remitente</span><span class="v" id="remitente">—</span></div>
+      <div class="row"><span class="k">Asunto</span><span class="v" id="asunto">—</span></div>
+    </section>
+
+    <section class="seccion">
+      <span class="k">Acreedor</span>
+      <div class="chips" id="chips"><span class="chips-vacio">Cargando…</span></div>
+    </section>
+
+    <section class="seccion">
+      <span class="k">PDF a guardar</span>
+      <div id="adjuntos"><span class="sin-adj">Buscando adjuntos…</span></div>
+    </section>
+
+    <button id="run" class="btn" disabled>Guardar en SharePoint</button>
+
+    <div id="status" class="status" hidden></div>
+  </main>
+
+  <script src="facturas.js"></script>
+</body>
+</html>
