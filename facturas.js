@@ -3,7 +3,7 @@
 // =====================================================================
 
 // URL POST del flujo "GuardarFacturaAcreedor" (trigger HTTP).
-const FLOW_URL = "";
+const FLOW_URL = "https://default3ec777bd8b8646a8800f6d98eab6bc.39.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fb910e725cee4c16b80bde3d307611a6/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=AavWhw2z58ityZogsJnDSQcOp-n9Sk-KTFtDuReSBDM";
 
 // Lista de acreedores. Debe coincidir con el nombre de las carpetas
 // de SharePoint en /ExtraerPDFAcreedores.
