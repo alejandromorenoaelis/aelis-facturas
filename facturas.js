@@ -130,7 +130,7 @@ function pintarAdjuntos(adjuntos) {
   cont.innerHTML = "";
 
   if (!pdfs.length) {
-    cont.innerHTML = '<span class="sin-adj">Este correo no lleva ningún PDF adjunto.</span>';
+    cont.innerHTML = '<span class="sin-adj">Este correo no contiene ningún PDF adjunto.</span>';
     return;
   }
 
