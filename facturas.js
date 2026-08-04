@@ -13,6 +13,17 @@ const ACREEDORES = ["Adam", "SGS", "Sin clasificar"];
 // las carpetas reales. Si se rellena, ACREEDORES solo actúa de respaldo.
 const ACREEDORES_URL = "";
 
+// Preselección automática. Si el dominio del remitente no coincide con el
+// nombre de la carpeta, se indica aquí la equivalencia.
+//   "dominio (sin .es/.com)": "Nombre exacto de la carpeta"
+const EQUIVALENCIAS = {
+  adam: "Adam",
+  sgs: "SGS"
+};
+
+// Umbral a partir del cual se muestra el buscador de acreedores.
+const CHIPS_CON_BUSCADOR = 8;
+
 let datosCorreo = {};
 let pdfs = [];              // { id, nombre, tipo, tamano }
 let acreedorElegido = null;
@@ -52,9 +63,34 @@ async function cargarAcreedores() {
   pintarChips(lista);
 }
 
+function raizDominio(correo) {
+  const dom = String(correo || "").split("@")[1] || "";
+  return (dom.split(".")[0] || "").toLowerCase();
+}
+
+// Devuelve el acreedor que corresponde al remitente, o null.
+function acreedorSugerido(lista) {
+  const raiz = raizDominio(datosCorreo.remitente);
+  if (!raiz) return null;
+  const objetivo = (EQUIVALENCIAS[raiz] || raiz).toLowerCase();
+  return lista.find((n) => n.toLowerCase() === objetivo) || null;
+}
+
 function pintarChips(lista) {
   const cont = $("chips");
+  const filtro = $("filtro");
   cont.innerHTML = "";
+
+  if (lista.length >= CHIPS_CON_BUSCADOR) {
+    filtro.hidden = false;
+    filtro.oninput = () => {
+      const q = filtro.value.trim().toLowerCase();
+      [...cont.children].forEach((c) => {
+        c.hidden = q !== "" && !c.textContent.toLowerCase().includes(q);
+      });
+    };
+  }
+
   lista.forEach((nombre) => {
     const b = document.createElement("button");
     b.className = "chip";
@@ -70,6 +106,12 @@ function pintarChips(lista) {
     };
     cont.appendChild(b);
   });
+
+  const sugerido = acreedorSugerido(lista);
+  if (sugerido) {
+    const chip = [...cont.children].find((c) => c.textContent === sugerido);
+    if (chip) chip.click();
+  }
 }
 
 // ---------- adjuntos ----------
@@ -112,7 +154,15 @@ function seleccionados() {
 }
 
 function revisarBoton() {
-  $("run").disabled = !acreedorElegido || seleccionados().length === 0;
+  const sinAcreedor = !acreedorElegido;
+  const sinPdf = seleccionados().length === 0;
+  $("run").disabled = sinAcreedor || sinPdf;
+
+  const hint = $("hint");
+  if (sinPdf && !pdfs.length) hint.textContent = "No hay ningún PDF que guardar";
+  else if (sinPdf) hint.textContent = "Marca al menos un PDF";
+  else if (sinAcreedor) hint.textContent = "Elige un acreedor para continuar";
+  else hint.textContent = "";
 }
 
 function leerContenidoAdjunto(id) {
@@ -174,8 +224,8 @@ async function guardar() {
     else estado("err", "No se pudo guardar",
       "El flujo respondió con el código " + res.status + ". Inténtalo de nuevo.");
   } catch (e) {
-    // Puede ser CORS al leer la respuesta; el envío suele haberse completado.
-    exito(envio.length);
+    estado("err", "No se pudo conectar con el flujo",
+      "Revisa la conexión. Detalle: " + String(e && e.message ? e.message : e));
   }
   resetBoton();
 }
@@ -193,6 +243,7 @@ function resetBoton() {
 
 // ---------- UI ----------
 function estado(tipo, msg, sub) {
+  $("hint").textContent = "";
   const box = $("status");
   box.hidden = false;
   box.className = "status " + tipo;
